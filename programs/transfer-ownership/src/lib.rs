@@ -5,7 +5,8 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 #[program]
 pub mod transfer_ownership {
     use super::*;
-    pub fn initialize(_ctx: Context<Initialize>) -> ProgramResult {
+    pub fn initialize(ctx: Context<Initialize>) -> ProgramResult {
+        ctx.accounts.account_address.data = String::from("Hello");
         Ok(())
     }
 
@@ -14,11 +15,16 @@ pub mod transfer_ownership {
         Ok(())
     }
 
-    pub fn send_sol_from_data_account(ctx: Context<SendSolFromData>) -> ProgramResult {
-        **ctx.accounts.to.lamports.borrow_mut() += **ctx.accounts.data_account.to_account_info().lamports.borrow_mut();
-        **ctx.accounts.data_account.to_account_info().lamports.borrow_mut() = 0;
+    pub fn send_sol_from_data_account(ctx: Context<SendSolFromData>, amount: u64) -> ProgramResult {
+        **ctx.accounts.to.lamports.borrow_mut() += amount;
+        **ctx.accounts.data_account.to_account_info().lamports.borrow_mut() -= amount;
 
 
+        Ok(())
+    }
+
+    pub fn zero_data_account(ctx: Context<ZeroData>) -> ProgramResult {
+        *ctx.accounts.account_pubkey.to_account_info().data.borrow_mut() = &mut [];
         Ok(())
     }
 }
@@ -34,6 +40,13 @@ pub struct Initialize<'info> {
 
 #[derive(Accounts)]
 pub struct ReAssign<'info> {
+    #[account(mut, signer)]
+    pub account_pubkey: AccountInfo<'info>,
+    pub program_id: AccountInfo<'info>
+}
+
+#[derive(Accounts)]
+pub struct ZeroData<'info> {
     #[account(mut, signer)]
     pub account_pubkey: AccountInfo<'info>,
     pub program_id: AccountInfo<'info>

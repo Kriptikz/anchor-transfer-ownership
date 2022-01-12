@@ -68,7 +68,7 @@ describe('transfer-ownership', () => {
 
   });
 
-  it('Transferring Ownership of Account initialized with Data!', async () => {
+  it('Transferring Ownership of Account initialized with Data Fails!', async () => {
 
     // Initilize user2 account with data owned by our program
     await provider.connection.confirmTransaction(
@@ -104,6 +104,10 @@ describe('transfer-ownership', () => {
     let user2Balance = await provider.connection.getBalance(user2.publicKey);
     console.log("User2 Balance: ", user2Balance);
 
+    // Get user2 Owner after assigning ownership back to the SystemProgram
+    user2Owner = await (await provider.connection.getAccountInfo(user2.publicKey)).owner
+    console.log("User2 Account Owner: ", user2Owner.toString());
+
   });
 
   it('Try to send sol from user2 Data account!', async () => {
@@ -137,20 +141,89 @@ describe('transfer-ownership', () => {
 
     console.log("Sending sol from Data Account using our program");
 
-    await program.rpc.sendSolFromDataAccount({
-      accounts: {
-        dataAccount: user2.publicKey,
-        to: user1.publicKey,
-        programId: anchor.web3.SystemProgram.programId
-      },
-      signers: [user2]
-    });
+    await provider.connection.confirmTransaction(
+      await program.rpc.sendSolFromDataAccount(
+        new anchor.BN(LAMPORTS_TO_SEND),
+        {
+        accounts: {
+          dataAccount: user2.publicKey,
+          to: user1.publicKey,
+          programId: anchor.web3.SystemProgram.programId
+        },
+        signers: [user2]
+      })
+    );
 
     let user1FinalBalance = await provider.connection.getBalance(user1.publicKey);
     user2FinalBalance = await provider.connection.getBalance(user2.publicKey);
 
     console.log("User1 Final Balance: ", user1FinalBalance);
     console.log("User2 Final Balance: ", user2FinalBalance);
+
+  });
+
+  it('Zero out Data Account!', async () => {
+
+    let user2AccountDataBefore = await (await provider.connection.getAccountInfo(user2.publicKey)).data;
+
+    console.log("User1 Data Before: ", user2AccountDataBefore);
+
+    await provider.connection.confirmTransaction(
+      await program.rpc.zeroDataAccount({
+        accounts: {
+          accountPubkey: user2.publicKey,
+          programId: anchor.web3.SystemProgram.programId
+        },
+        signers: [user2]
+      })
+    );
+
+    let user2AccountDataAfter = await (await provider.connection.getAccountInfo(user2.publicKey)).data;
+
+    console.log("User1 Data After: ", user2AccountDataAfter);
+  });
+
+  it('Send all lamps from data account then transfer ownership', async () => {
+    let user2Balance = await provider.connection.getBalance(user2.publicKey);
+    console.log("Initial User2 Balance: ", user2Balance);
+
+    await provider.connection.confirmTransaction(
+      await program.rpc.sendSolFromDataAccount(
+        new anchor.BN(user2Balance),
+        {
+        accounts: {
+          dataAccount: user2.publicKey,
+          to: user1.publicKey,
+          programId: anchor.web3.SystemProgram.programId
+        },
+        signers: [user2]
+      })
+    );
+
+    user2Balance = await provider.connection.getBalance(user2.publicKey);
+    console.log("After User2 Balance: ", user2Balance);
+
+    // No need to re-assign ownership to an account that has been cleared from not having enough rent.
+    //await provider.connection.confirmTransaction(
+    //  await program.rpc.reAssign({
+    //    accounts: {
+    //      accountPubkey: user2.publicKey,
+    //      programId: anchor.web3.SystemProgram.programId
+    //    },
+    //    signers: [user2]
+    //  })
+    //);
+
+    // Send more sol from user1 to user2
+    let ix = anchor.web3.SystemProgram.transfer({fromPubkey: user1.publicKey, toPubkey: user2.publicKey, lamports: LAMPORTS_TO_SEND});
+
+    let tx = new anchor.web3.Transaction().add(ix);
+
+    await anchor.web3.sendAndConfirmTransaction(provider.connection, tx, [user1]);
+    
+
+    let user2Owner = await (await provider.connection.getAccountInfo(user2.publicKey)).owner;
+    console.log("After User2 Owner: ", user2Owner.toString());
 
   });
 
