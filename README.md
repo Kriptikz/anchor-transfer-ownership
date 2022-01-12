@@ -21,4 +21,6 @@ Now lets see if I can transfer some sol from it.
 
 First from the SystemProgram. This errors out. The account can not be used to pay transaction fees.
 
-Then from within our own program.
+Then from within our own program. This works!
+
+Now let's try to zero out the data and send ownership back to the SystemProgram.

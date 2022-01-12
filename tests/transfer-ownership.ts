@@ -37,7 +37,7 @@ describe('transfer-ownership', () => {
     // Change user1 Owner to our program 
     let ix = anchor.web3.SystemProgram.assign({accountPubkey: user1.publicKey, programId: program.programId})
 
-    let tx = new anchor.web3.Transaction().add(ix);
+    let tx = new anchor.web3.Transaction({feePayer: user1.publicKey}).add(ix);
     await anchor.web3.sendAndConfirmTransaction(provider.connection, tx, [user1]);
 
     // Get user1 Owner after assigning ownership to our program
@@ -110,7 +110,12 @@ describe('transfer-ownership', () => {
 
     const BONUS_LAMPS_TO_SEND = 10_000_000;
 
+    let user1InitialBalance = await provider.connection.getBalance(user1.publicKey);
     let user2InitialBalance = await provider.connection.getBalance(user2.publicKey);
+
+    console.log("User1 Initial Balance: ", user1InitialBalance);
+    console.log("User2 Initial Balance: ", user2InitialBalance);
+
 
     // Send more sol from user1 to user2
     let ix = anchor.web3.SystemProgram.transfer({fromPubkey: user1.publicKey, toPubkey: user2.publicKey, lamports: LAMPORTS_TO_SEND + BONUS_LAMPS_TO_SEND});
@@ -124,11 +129,28 @@ describe('transfer-ownership', () => {
     assert.equal(user2InitialBalance + LAMPORTS_TO_SEND + BONUS_LAMPS_TO_SEND, user2FinalBalance);
 
     // Send sol from user2 to user1
-    ix = anchor.web3.SystemProgram.transfer({fromPubkey: user2.publicKey, toPubkey: user1.publicKey, lamports: LAMPORTS_TO_SEND})
-    tx = new anchor.web3.Transaction().add(ix);
+    // This doesn't work since SystemProgram doesn't own the user2 account anymore
+    //ix = anchor.web3.SystemProgram.transfer({fromPubkey: user2.publicKey, toPubkey: user1.publicKey, lamports: LAMPORTS_TO_SEND})
+    //tx = new anchor.web3.Transaction().add(ix);
+//
+    //await anchor.web3.sendAndConfirmTransaction(provider.connection, tx, [user2]);
 
-    await anchor.web3.sendAndConfirmTransaction(provider.connection, tx, [user2]);
+    console.log("Sending sol from Data Account using our program");
 
+    await program.rpc.sendSolFromDataAccount({
+      accounts: {
+        dataAccount: user2.publicKey,
+        to: user1.publicKey,
+        programId: anchor.web3.SystemProgram.programId
+      },
+      signers: [user2]
+    });
+
+    let user1FinalBalance = await provider.connection.getBalance(user1.publicKey);
+    user2FinalBalance = await provider.connection.getBalance(user2.publicKey);
+
+    console.log("User1 Final Balance: ", user1FinalBalance);
+    console.log("User2 Final Balance: ", user2FinalBalance);
 
   });
 

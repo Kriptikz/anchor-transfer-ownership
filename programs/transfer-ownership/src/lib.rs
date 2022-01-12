@@ -15,6 +15,10 @@ pub mod transfer_ownership {
     }
 
     pub fn send_sol_from_data_account(ctx: Context<SendSolFromData>) -> ProgramResult {
+        **ctx.accounts.to.lamports.borrow_mut() += **ctx.accounts.data_account.to_account_info().lamports.borrow_mut();
+        **ctx.accounts.data_account.to_account_info().lamports.borrow_mut() = 0;
+
+
         Ok(())
     }
 }
