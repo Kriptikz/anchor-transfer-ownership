@@ -1,5 +1,8 @@
 # anchor-transfer-ownership
 
+This project is just me playing around with Account owners and data. For example trying to transfer ownership of accounts with/without data between programs. As well as transferring lamports from custom program accounts to other accounts. I also try to zero out the data of an account, but haven't figured that out yet.
+
+
 This project creates a user account and airdrops some sol. 
 
 After the airdrop the owner is the system program.
