@@ -13,6 +13,10 @@ pub mod transfer_ownership {
         ctx.accounts.account_pubkey.assign(ctx.accounts.program_id.key);
         Ok(())
     }
+
+    pub fn send_sol_from_data_account(ctx: Context<SendSolFromData>) -> ProgramResult {
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -28,6 +32,15 @@ pub struct Initialize<'info> {
 pub struct ReAssign<'info> {
     #[account(mut, signer)]
     pub account_pubkey: AccountInfo<'info>,
+    pub program_id: AccountInfo<'info>
+}
+
+#[derive(Accounts)]
+pub struct SendSolFromData<'info> {
+    #[account(mut, signer)]
+    pub data_account: Account<'info, Data>,
+    #[account(mut)]
+    pub to: AccountInfo<'info>,
     pub program_id: AccountInfo<'info>
 }
 

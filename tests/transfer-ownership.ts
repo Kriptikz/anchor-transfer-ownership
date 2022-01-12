@@ -1,6 +1,7 @@
 import * as anchor from '@project-serum/anchor';
 import { Program } from '@project-serum/anchor';
 import { TransferOwnership } from '../target/types/transfer_ownership';
+import { assert } from 'chai';
 
 describe('transfer-ownership', () => {
 
@@ -99,5 +100,36 @@ describe('transfer-ownership', () => {
     } catch (err) {
       console.log("Error: Transferring ownership of initialized account.")
     }
+
+    let user2Balance = await provider.connection.getBalance(user2.publicKey);
+    console.log("User2 Balance: ", user2Balance);
+
   });
+
+  it('Try to send sol from user2 Data account!', async () => {
+
+    const BONUS_LAMPS_TO_SEND = 10_000_000;
+
+    let user2InitialBalance = await provider.connection.getBalance(user2.publicKey);
+
+    // Send more sol from user1 to user2
+    let ix = anchor.web3.SystemProgram.transfer({fromPubkey: user1.publicKey, toPubkey: user2.publicKey, lamports: LAMPORTS_TO_SEND + BONUS_LAMPS_TO_SEND});
+
+    let tx = new anchor.web3.Transaction().add(ix);
+
+    await anchor.web3.sendAndConfirmTransaction(provider.connection, tx, [user1]);
+
+    let user2FinalBalance = await provider.connection.getBalance(user2.publicKey);
+
+    assert.equal(user2InitialBalance + LAMPORTS_TO_SEND + BONUS_LAMPS_TO_SEND, user2FinalBalance);
+
+    // Send sol from user2 to user1
+    ix = anchor.web3.SystemProgram.transfer({fromPubkey: user2.publicKey, toPubkey: user1.publicKey, lamports: LAMPORTS_TO_SEND})
+    tx = new anchor.web3.Transaction().add(ix);
+
+    await anchor.web3.sendAndConfirmTransaction(provider.connection, tx, [user2]);
+
+
+  });
+
 });

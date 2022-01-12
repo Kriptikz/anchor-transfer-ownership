@@ -14,3 +14,11 @@ Then we transfer ownership back to the system program using our programs functio
 So even if we use SystemProgram.createAccount() we can still transfer ownership around.
 
 Maybe once the account has some data associated with it, it can no longer change owners.
+
+Correct, once the account is initialized with some data the program id can no longer be modified
+
+Now lets see if I can transfer some sol from it.
+
+First from the SystemProgram. This errors out. The account can not be used to pay transaction fees.
+
+Then from within our own program.
