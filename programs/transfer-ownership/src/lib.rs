@@ -5,7 +5,7 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 #[program]
 pub mod transfer_ownership {
     use super::*;
-    pub fn initialize(ctx: Context<Initialize>) -> ProgramResult {
+    pub fn initialize(_ctx: Context<Initialize>) -> ProgramResult {
         Ok(())
     }
 
@@ -16,11 +16,22 @@ pub mod transfer_ownership {
 }
 
 #[derive(Accounts)]
-pub struct Initialize {}
+pub struct Initialize<'info> {
+    #[account(init, payer = payer, space = 64)]
+    pub account_address: Account<'info, Data>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    pub system_program: Program<'info, System>
+}
 
 #[derive(Accounts)]
 pub struct ReAssign<'info> {
     #[account(mut, signer)]
     pub account_pubkey: AccountInfo<'info>,
     pub program_id: AccountInfo<'info>
+}
+
+#[account]
+pub struct Data{
+    pub data: String,
 }
