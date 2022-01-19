@@ -20,11 +20,16 @@ pub mod transfer_ownership {
         **ctx.accounts.data_account.to_account_info().lamports.borrow_mut() -= amount;
 
 
+
         Ok(())
     }
 
     pub fn zero_data_account(ctx: Context<ZeroData>) -> ProgramResult {
-        *ctx.accounts.account_pubkey.to_account_info().data.borrow_mut() = &mut [];
+        //data = Data{ data: String::from("Goodbye")}.try_to_vec()?;
+        //*ctx.accounts.account_pubkey.data.borrow_mut() = &mut data[..];
+        //ctx.accounts.account_pubkey.to_account_info().try_borrow_mut_data()? = &mut [];
+        
+
         Ok(())
     }
 }
@@ -32,7 +37,7 @@ pub mod transfer_ownership {
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     #[account(init, payer = payer, space = 64)]
-    pub account_address: Account<'info, Data>,
+    pub account_address: Account<'info, DataAccount>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub system_program: Program<'info, System>
@@ -54,14 +59,14 @@ pub struct ZeroData<'info> {
 
 #[derive(Accounts)]
 pub struct SendSolFromData<'info> {
-    #[account(mut, signer)]
-    pub data_account: Account<'info, Data>,
     #[account(mut)]
+    pub data_account: Account<'info, DataAccount>,
+    #[account(mut, signer)]
     pub to: AccountInfo<'info>,
     pub program_id: AccountInfo<'info>
 }
 
 #[account]
-pub struct Data{
+pub struct DataAccount{
     pub data: String,
 }

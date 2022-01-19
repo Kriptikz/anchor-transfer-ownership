@@ -150,7 +150,7 @@ describe('transfer-ownership', () => {
           to: user1.publicKey,
           programId: anchor.web3.SystemProgram.programId
         },
-        signers: [user2]
+        signers: [user1]
       })
     );
 
@@ -166,7 +166,7 @@ describe('transfer-ownership', () => {
 
     let user2AccountDataBefore = await (await provider.connection.getAccountInfo(user2.publicKey)).data;
 
-    console.log("User1 Data Before: ", user2AccountDataBefore);
+    console.log("User1 Data Before: ", user2AccountDataBefore.toString());
 
     await provider.connection.confirmTransaction(
       await program.rpc.zeroDataAccount({
@@ -180,7 +180,10 @@ describe('transfer-ownership', () => {
 
     let user2AccountDataAfter = await (await provider.connection.getAccountInfo(user2.publicKey)).data;
 
-    console.log("User1 Data After: ", user2AccountDataAfter);
+    console.log("User1 Data After: ", user2AccountDataAfter.toString());
+
+    // Unable to zero out data.
+    assert(false);
   });
 
   it('Send all lamps from data account then transfer ownership', async () => {
@@ -196,7 +199,7 @@ describe('transfer-ownership', () => {
           to: user1.publicKey,
           programId: anchor.web3.SystemProgram.programId
         },
-        signers: [user2]
+        signers: [user1]
       })
     );
 
